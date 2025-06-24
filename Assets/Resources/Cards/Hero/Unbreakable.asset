@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2719d73f4fb85f43b56b554ace71992, type: 3}
+  m_Name: Unbreakable
+  m_EditorClassIdentifier: 
+  cardName: Unbreakable
+  description: Add 50 block
+  cost: 3
+  power: 0
+  block: 50
+  rarity: 0
+  frequency: 0
+  Exposed: 0
+  Weak: 0
+  Hexed: 0
+  Mark: 0
+  Strength: 0
+  Enraged: 0
+  Regenerating: 0
+  Tough: 0
+  Cull: 0
+  Nullify: 0
+  Heal: 0
+  font: 1.2
+  sprite: {fileID: 21300000, guid: d4eca32a8d345334387c3ce32d703cd2, type: 3}
+  cardType: 1
+  playerTargeted: 0
+  enemyTargeted: 0
+  noTarget: 1
+  playerCharacter: 0
