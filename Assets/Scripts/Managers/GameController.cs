@@ -11,9 +11,9 @@ public class GameController : MonoBehaviour
     Deck savedCards;
     bool newGame;
     PlayerCharacter character;
+    GameState gameState;
     BattleManager battleManager;
-    [SerializeField]
-    GameObject cardPrefab, enemyPrefab, playerPrefab, buttonPrefab;
+    public GameObject cardPrefab, enemyPrefab, playerPrefab, buttonPrefab;
     [SerializeField]
     Button endTurnButton;
     public TMPro.TextMeshProUGUI gameOverText;
@@ -28,7 +28,7 @@ public class GameController : MonoBehaviour
         character = PlayerCharacter.Hero;
 
         battleManager = gameObject.AddComponent<BattleManager>();
-        battleManager.CreateGame(savedCards, character, cardPrefab, enemyPrefab, playerPrefab, buttonPrefab);
+        battleManager.CreateGame(character, this);
 
 
 
@@ -39,8 +39,11 @@ public class GameController : MonoBehaviour
     }
     void Update()
     {
-        
+        if(gameState == GameState.Menu)
+        {
+            //Implement pause or menuing
+        }
     }
     
 }
-public enum GameState { Menu, GameOver, Battle, PrePostBattle }
+public enum GameState { Menu, Play, Pause }

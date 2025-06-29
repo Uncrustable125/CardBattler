@@ -24,11 +24,11 @@ public class InGameActor : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (BattleManager.Instance.gameState == GameState.Battle)
+        if (BattleManager.Instance.battleState == BattleState.Battle)
         {
             GetComponent<TargetingCard>().StartTargeting(card);
         }
-        else if (BattleManager.Instance.gameState == GameState.PrePostBattle)
+        else if (BattleManager.Instance.battleState == BattleState.PrePostBattle)
         {
             BattleManager.Instance.AddCardDeck(card);
         }

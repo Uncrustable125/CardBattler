@@ -39,17 +39,18 @@ public class Player : MonoBehaviour
     }
     public void UpdateTexts()
     {
-        inGameActor.UpdateTexts(health, block, Weak, Exposed, Strength, mana);
+        if (inGameActor != null)
+            inGameActor.UpdateTexts(health, block, Weak, Exposed, Strength, mana);
     }
 
     void OnEnable()
     {
-        BattleManager.OnAction += PlayerAction;
+        CardExecutor.OnPlayerAction += PlayerAction;
     }
 
     void OnDisable()
     {
-        BattleManager.OnAction -= PlayerAction;
+        CardExecutor.OnPlayerAction -= PlayerAction;
     }
 
     public void EnemyAttack(EnemyAttack enemyAttack, Enemy enemy)
@@ -81,6 +82,8 @@ public class Player : MonoBehaviour
         Weak += enemyAttack.Weak;
         UpdateTexts();
 
+        BattleManager.Instance.CheckForGameOver();
+        
 
     }
 

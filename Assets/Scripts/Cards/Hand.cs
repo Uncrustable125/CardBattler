@@ -8,7 +8,7 @@ public class Hand : MonoBehaviour
 
     void OnEnable()
     {
-        BattleManager.OnAction += CurrentAction;
+        CardExecutor.OnPlayerAction += CurrentAction;
     }
 
     public void clear()
@@ -17,7 +17,7 @@ public class Hand : MonoBehaviour
     }
     void OnDisable()
     {
-        BattleManager.OnAction -= CurrentAction;
+        CardExecutor.OnPlayerAction -= CurrentAction;
     }
     public Hand()
     {      

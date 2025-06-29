@@ -7,30 +7,27 @@ using UnityEngine;
 public class BattleManager : MonoBehaviour
 {
     public static BattleManager Instance;
-
-    public static event Action<Card> OnAction;
-
-
-    public Deck playerDeckBase, currentPlayerDeck, discardPile;
-    public List<Enemy> enemies = new List<Enemy>();
-    public PlayerCharacter playerCharacter;
-    public GameState gameState;
-    Enemy enemy0, enemy1, enemy2, enemy3;
-    int extraDraw, rewardCards;
-    int standardDraw = 5;
-    public CardIndex cardIndex;
-    Hand playerHand, tempCards;
-    bool  action,  gameOver;
-    public Button button, endTurnButton;
-    public Player player;
-    GameObject cardPrefab, enemyPrefab, playerPrefab, buttonPrefab,
-        newEnemy0, newEnemy1, newEnemy2, newEnemy3, newPlayer;
     GameController gc;
 
+    int extraDraw, rewardCards, standardDraw;
+    public bool action, gameOver;
 
+    public CardIndex cardIndex;
+    public Deck playerDeckBase, currentPlayerDeck, discardPile;
+    Hand playerHand, tempCards;
+    public Player player; 
+    public List<Enemy> enemies = new List<Enemy>();
+    Enemy enemy0, enemy1, enemy2, enemy3;  
+    public Button button, endTurnButton;
+    private CardExecutor cardExecutor;
+    private TurnManager turnManager;
+    GameObject cardPrefab, enemyPrefab, playerPrefab, buttonPrefab,
+        newEnemy0, newEnemy1, newEnemy2, newEnemy3, newPlayer;
+
+    public PlayerCharacter playerCharacter;
+    public BattleState battleState;
     private void Awake()
     {
-
         if (Instance == null)
         {
             Instance = this;
@@ -40,72 +37,98 @@ public class BattleManager : MonoBehaviour
         {
             Destroy(gameObject); // Avoid duplicates
         }
-        cardIndex = gameObject.AddComponent<CardIndex>();
-        endTurnButton = FindAnyObjectByType<Button>();
-        gc = FindAnyObjectByType<GameController>();
 
-        action = false;
-        rewardCards = 3;
-        gameState = GameState.PrePostBattle;
-    }
-
+     }
     void Update()
     {
         if (action)
         {
-            for (int i = 0; i < playerHand.cards.Count; i++)
-            {
-                if (playerHand.cards[i].currentCard)
-                {
-                    if (player.mana >= playerHand.cards[i].cost)
-                    {
-                        if (playerHand.cards[i].noTarget)
-                        {
-                            enemies.ForEach(enemy => enemy.isTargeted = true);
-                        }
-                        //remove player energy
-                        //remove health from enemy
-                        //add block
-                        playerHand.cards[i].currentCard = false;
-                        AddToDiscardPile(playerHand.cards[i]);
-                        OnAction?.Invoke(playerHand.cards[i]);
-                        i--;
-                    }
-                    else
-                    {
-                        enemies.ForEach(enemy => enemy.isTargeted = false);
-                        playerHand.cards[i].currentCard = false;
-                        Debug.Log("Not Enough Mana!");
-                        TargetingCard cardPos = playerHand.cards[i].
-                            inGameObject.GetComponent<TargetingCard>();
-
-
-                        cardPos.transform.position = cardPos.origin;
-                    }
-                        
-                    
-
-                }
-                enemies.RemoveAll(e => e.isDead);
-                if(enemies.Count == 0)
-                {
-                    TurnEnd();
-                    EndEncounter();
-                }
-            }
-            action = false;
+            cardExecutor.TryPlayCards();
+            ResolvePostAction();
         }
+
+    }
+
+
+
+    public void ResolvePostAction()
+    {
+        enemies.RemoveAll(e => e.isDead);
+
+        if (enemies.Count == 0)
+        {
+            TurnEnd();
+            EndEncounter();
+        }
+        action = false;
+        CheckForGameOver();
+    }
+    public void CheckForGameOver()
+    {
         if (player.health <= 0 && !gameOver)
         {
             gameOver = true;
             GameOver();
         }
-
     }
-    void GameOver()
+
+    /* void Update()
+     {
+         if (action)
+         {
+             for (int i = 0; i < playerHand.cards.Count; i++)
+             {
+                 if (playerHand.cards[i].currentCard)
+                 {
+                     if (player.mana >= playerHand.cards[i].cost)
+                     {
+                         if (playerHand.cards[i].noTarget)
+                         {
+                             enemies.ForEach(enemy => enemy.isTargeted = true);
+                         }
+                         //remove player energy
+                         //remove health from enemy
+                         //add block
+                         playerHand.cards[i].currentCard = false;
+                         AddToDiscardPile(playerHand.cards[i]);
+                         OnAction?.Invoke(playerHand.cards[i]);
+                         i--;
+                     }
+                     else
+                     {
+                         enemies.ForEach(enemy => enemy.isTargeted = false);
+                         playerHand.cards[i].currentCard = false;
+                         Debug.Log("Not Enough Mana!");
+                         TargetingCard cardPos = playerHand.cards[i].
+                             inGameObject.GetComponent<TargetingCard>();
+
+
+                         cardPos.transform.position = cardPos.origin;
+                     }
+
+
+
+                 }
+                 enemies.RemoveAll(e => e.isDead);
+                 if (enemies.Count == 0)
+                 {
+                     TurnEnd();
+                     EndEncounter();
+                 }
+             }
+             action = false;
+         }
+         if (player.health <= 0 && !gameOver)
+         {
+             gameOver = true;
+             GameOver();
+         }
+
+     }*/
+    public void GameOver()
     {
         //Animate death by rotating guy
-        gameState = GameState.GameOver;
+        battleState = BattleState.GameOver;
 
         gc.gameOverText.alpha = 1.0f;
 
@@ -119,8 +142,8 @@ public class BattleManager : MonoBehaviour
 
 
         
-        DisposeHand(playerHand);
-        DisposeHand(tempCards);
+        turnManager.DisposeHand(playerHand);
+        turnManager.DisposeHand(tempCards);
 
        // playerHand.clear();
        // tempCards.clear();
@@ -140,15 +163,14 @@ public class BattleManager : MonoBehaviour
         action = false;
         endTurnButton.RemoveFromScreen();
 
-
     }
-
+        
     public void restartGame()
     {      
         DisposeButton(button);
         gc.gameOverText.alpha = 0;
 
-        gameState = GameState.PrePostBattle;
+        battleState = BattleState.PrePostBattle;
         StartGame();
         
         endTurnButton.ReturnToOriginalPos();
@@ -160,26 +182,37 @@ public class BattleManager : MonoBehaviour
     }
 
 
-    public void CreateGame(Deck savedDeck, PlayerCharacter character,
-        GameObject cardPrefab, GameObject enemyPrefab,
-        GameObject playerPrefab, GameObject buttonPrefab)
+    public void CreateGame(PlayerCharacter character, GameController gc)
         
     {
+
         playerCharacter = character;
+        gc.cardPrefab = cardPrefab;
+        gc.enemyPrefab = enemyPrefab;
+        gc.playerPrefab = playerPrefab;
+        gc.buttonPrefab = buttonPrefab;
+        battleState = BattleState.PrePostBattle;
+
+        cardIndex = gameObject.AddComponent<CardIndex>();
+        cardIndex.LoadCards(playerCharacter);
+
+        endTurnButton = FindAnyObjectByType<Button>();
         
-        cardIndex.LoadCards(playerCharacter);      
-        this.cardPrefab = cardPrefab;
-        this.enemyPrefab = enemyPrefab;
-        this.playerPrefab = playerPrefab;
-        this.buttonPrefab = buttonPrefab;
+
+
         player = gameObject.AddComponent<Player>();
         playerDeckBase = gameObject.AddComponent<Deck>();
-        extraDraw = 0;//Can change amount of cards drawn
         playerHand = gameObject.AddComponent<Hand>();
         tempCards = gameObject.AddComponent<Hand>();
         currentPlayerDeck = gameObject.AddComponent<Deck>();
         discardPile = gameObject.AddComponent<Deck>();
+        cardExecutor = new CardExecutor(player, playerHand, discardPile, enemies);
+        turnManager = new TurnManager(currentPlayerDeck, discardPile, playerHand, enemies, player, this);
 
+        action = false;
+        extraDraw = 0;
+        rewardCards = 3;
+        standardDraw = 5;
         StartGame();
     }
 
@@ -211,10 +244,10 @@ public class BattleManager : MonoBehaviour
             x.enemyAttackSelect();
         }
     }
-    void EndEncounter()
+    public void EndEncounter()
     {
-        gameState = GameState.PrePostBattle;
-        DisposeHand(playerHand);
+        battleState = BattleState.PrePostBattle;
+        turnManager.DisposeHand(playerHand);
         endTurnButton.RemoveFromScreen();
         SelectNewCard();
         
@@ -229,10 +262,10 @@ public class BattleManager : MonoBehaviour
         
         SpawnEnemies(encounter);
         SpawnEnemyAttacks();
-        DrawCards();
-        gameState = GameState.Battle;
+        turnManager.DrawCards();
+        battleState = BattleState.Battle;
     }
-    public void TurnEnd()
+    /*public void TurnEnd()
     {
         DisposeHand(playerHand);
         if (enemies.Count != 0)
@@ -245,15 +278,20 @@ public class BattleManager : MonoBehaviour
         }
         SpawnEnemyAttacks();
         player.playerTurnReset();
+    }*/
+    public void TurnEnd()
+    {
+        turnManager.EndTurn();
     }
+
     void ReShuffle()
     {
-        if(gameState == GameState.Battle)
+        if(battleState == BattleState.Battle)
         {
             CopyAndShuffleDeck(currentPlayerDeck, discardPile);
             //This is killing it
         }
-        else if (gameState == GameState.PrePostBattle)
+        else if (battleState == BattleState.PrePostBattle)
         {
             //when do I use this?
             CopyAndShuffleDeck(currentPlayerDeck, playerDeckBase); 
@@ -265,12 +303,14 @@ public class BattleManager : MonoBehaviour
         for (int currentDraw = 0; currentDraw < standardDraw + extraDraw; currentDraw++)
         {
             //Make sure this has the proper value for int currentDraw
-            playerHand.cards.Add(currentPlayerDeck.cards[0]);
-            DisplayCards(playerHand.cards[currentDraw], currentDraw, true);
-            //Need to remove cards from the deck and add to Discard pile            
-            currentPlayerDeck.cards.RemoveAt(0);
-
-            if(currentPlayerDeck.cards.Count == 0)//Reshuffle
+            if (currentPlayerDeck.cards.Count != 0)
+            {
+                playerHand.cards.Add(currentPlayerDeck.cards[0]);
+                DisplayCards(playerHand.cards[currentDraw], currentDraw, true);
+                //Need to remove cards from the deck and add to Discard pile            
+                currentPlayerDeck.cards.RemoveAt(0);
+            }
+            if (currentPlayerDeck.cards.Count == 0)//Reshuffle
             {
                 ReShuffle();
             }
@@ -334,7 +374,7 @@ public class BattleManager : MonoBehaviour
         
     }
 
-
+    /*
     void DisposeHand(Hand hand)
     {
         for (int i = 0; i < hand.cards.Count; i++)
@@ -344,13 +384,13 @@ public class BattleManager : MonoBehaviour
             hand.cards.RemoveAt(i);
             i--;
         }
-    }
+    }*/
     void AddToDiscardPile(Card card)
     {
         discardPile.cards.Add(card);
     }
 
-    void DisplayCards(Card card, int cardDrawn, bool drawingHand)
+    public void DisplayCards(Card card, int cardDrawn, bool drawingHand)
     {
         if (drawingHand)
         {
@@ -407,7 +447,7 @@ public class BattleManager : MonoBehaviour
         {
             playerDeckBase.cards.Add(card);
         }
-        DisposeHand(tempCards);
+        turnManager.DisposeHand(tempCards);
         DisposeButton(button);
         SelectTrinky();
         NextEncounter();
@@ -428,3 +468,4 @@ public class BattleManager : MonoBehaviour
 
 }
 public enum PlayerCharacter { Hero, Null, TheVessel, TheEcho, WaterMage }
+public enum BattleState { GameOver, Battle, PrePostBattle }
