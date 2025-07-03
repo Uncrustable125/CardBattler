@@ -2,39 +2,43 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Handles turn-based logic including ending a turn, drawing cards, and resetting player state.
+/// Handles turn-based logic including ending a turn and resetting player state.
 /// Extracted from BattleManager to separate responsibilities.
 /// </summary>
 public class TurnManager
 {
-    private Deck deck;
-    private Deck discardPile;
-    private Hand playerHand;
     private List<Enemy> enemies;
     private Player player;
     private BattleManager battleManager;
+    private CardManager cardManager;
+    private BattleConfig battleConfig;
+    private PrefabManager prefabManager;
+    private GameObject buttonPrefab;
+    private Button endTurnButton, skipButton, button;
+    private GameObject tempButton;
 
-    private int standardDraw = 5;
-    private int extraDraw = 0;
+
 
     public TurnManager(
-        Deck deck,
-        Deck discardPile,
-        Hand hand,
         List<Enemy> enemies,
         Player player,
         BattleManager manager,
-        int standardDraw = 5,
-        int extraDraw = 0)
+        CardManager cardManager,
+        BattleConfig battleConfig,
+        PrefabManager prefabManager,
+        GameObject buttonPrefab, 
+        Button endTurnButton)
     {
-        this.deck = deck;
-        this.discardPile = discardPile;
-        this.playerHand = hand;
         this.enemies = enemies;
         this.player = player;
         this.battleManager = manager;
-        this.standardDraw = standardDraw;
-        this.extraDraw = extraDraw;
+        this.cardManager = cardManager;
+        this.battleConfig = battleConfig;
+        this.prefabManager = prefabManager;
+        this.buttonPrefab = buttonPrefab;
+        
+        this.endTurnButton = endTurnButton;
+
     }
 
     /// <summary>
@@ -42,72 +46,80 @@ public class TurnManager
     /// </summary>
     public void EndTurn()
     {
-        DisposeHand(playerHand);
-
+        cardManager.DisposeHand();
         if (enemies.Count != 0)
         {
             foreach (var enemy in enemies)
             {
+
                 enemy.EnemyTurn();
+                if (BattleManager.Instance.gameOver)
+                {
+                    break;
+                }
             }
 
-            DrawCards();
+            cardManager.DrawCards();
         }
 
         foreach (var enemy in enemies)
         {
+
             enemy.enemyAttackSelect();
+            if (BattleManager.Instance.gameOver)
+            {
+                break;
+            }
         }
 
         player.playerTurnReset();
     }
-
-    /// <summary>
-    /// Draws cards into the player's hand from the current deck.
-    /// </summary>
-    public void DrawCards()
+    public void restartGame()
     {
-        int drawCount = standardDraw + extraDraw;
+        DisposeButton(button);
+        battleConfig.gameOverText.alpha = 0;
 
-        for (int currentDraw = 0; currentDraw < drawCount; currentDraw++)
+
+        BattleManager.Instance.battleState = BattleState.PrePostBattle;
+
+        endTurnButton.ReturnToOriginalPos();
+        BattleManager.Instance.gameOver = false;
+    }
+    public void DisposeButton(Button button = null)
+    {
+        if(button == null)
         {
-            if (deck.cards.Count == 0)
-            {
-                Reshuffle();
-            }
-
-            if (deck.cards.Count == 0) break; // no cards left to draw
-
-            Card drawnCard = deck.cards[0];
-            deck.cards.RemoveAt(0);
-            playerHand.cards.Add(drawnCard);
-
-            battleManager.DisplayCards(drawnCard, currentDraw, true);
+            button = tempButton.GetComponent<Button>();
         }
+        UnityEngine.Object.Destroy(button.gameObject);
+        button = null;
     }
-
-    /// <summary>
-    /// Transfers all cards in the player's hand to the discard pile and disposes their visuals.
-    /// </summary>
-    public void DisposeHand(Hand hand)
+    //All button stuff here
+    public void GameOver()
     {
-        for (int i = 0; i < hand.cards.Count; i++)
+        battleConfig.gameOverText.alpha = 1.0f;
+        //Destroy all objects
+        foreach (Enemy x in enemies)
         {
-            Card card = hand.cards[i];
-            discardPile.cards.Add(card);
-            card.DisposeInGameActor();
+            x.Dispose();
         }
+        enemies.Clear();
+        player.Dispose();
 
-        hand.cards.Clear();
+        SpawnSkipButton(1);
+
+        //Spawn in Game Over 
+
+        BattleManager.Instance.action = false;
+        endTurnButton.RemoveFromScreen();
+        BattleManager.Instance.battleState = BattleState.GameOver;
     }
-
-    /// <summary>
-    /// Shuffles the discard pile back into the main deck.
-    /// </summary>
-    private void Reshuffle()
+    public void SpawnSkipButton(int textSelection)
     {
-        deck.cards.AddRange(discardPile.cards);
-        discardPile.cards.Clear();
-        deck.Shuffle();
+        tempButton = prefabManager.Spawn(buttonPrefab, new Vector3(0f, -3.5f, 0f));
+        tempButton.transform.localScale = new Vector3(2f, 0.75f, 1f);
+        tempButton.GetComponent<Button>().updateText(textSelection);
     }
+
+
 }

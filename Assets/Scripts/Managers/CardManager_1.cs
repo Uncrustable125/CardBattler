@@ -1,12 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+/*
 
-/// <summary>
-/// Handles card execution logic: validating mana, applying effects, and handling turn end/game over.
-/// Extracted from BattleManager for clarity and modularity.
-/// </summary>
-public class CardExecutor
+public class CardManager
 {
     private Player player;
     private Hand playerHand;
@@ -14,7 +11,7 @@ public class CardExecutor
     private List<Enemy> enemies;
     public static event Action<Card> OnPlayerAction;
 
-    public CardExecutor(Player player, Hand hand, Deck discardPile, List<Enemy> enemies)
+    public CardManager(Player player, Hand hand, Deck discardPile, List<Enemy> enemies)
     {
         this.player = player;
         this.playerHand = hand;
@@ -22,10 +19,7 @@ public class CardExecutor
         this.enemies = enemies;
     }
 
-    /// <summary>
-    /// Attempts to play all active cards in the player's hand.
-    /// Handles card execution, enemy targeting, win condition, and game over.
-    /// </summary>
+
     public void TryPlayCards()
     {
         for (int i = 0; i < playerHand.cards.Count; i++)
@@ -59,3 +53,4 @@ public class CardExecutor
 
     }
 }
+*/

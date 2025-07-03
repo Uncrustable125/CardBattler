@@ -624,12 +624,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e49d60d722ffa2469fddeaa94f341ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  character: 0
   cardPrefab: {fileID: 5573367531015320011, guid: 50874772dc0f40042b6f7414fafee339, type: 3}
   enemyPrefab: {fileID: 5573367531015320011, guid: a740412fe8fae534496f5d40660b2824, type: 3}
   playerPrefab: {fileID: 5573367531015320011, guid: f75486055f142e348bad58ed949e8fe7, type: 3}
   buttonPrefab: {fileID: 2965501653592123117, guid: 2a078e1342b302e41ac53350b900182a, type: 3}
   endTurnButton: {fileID: 1019605860}
   gameOverText: {fileID: 180962923}
+  backgroundParent: {fileID: 519420032}
 --- !u!1 &1019605856
 GameObject:
   m_ObjectHideFlags: 0

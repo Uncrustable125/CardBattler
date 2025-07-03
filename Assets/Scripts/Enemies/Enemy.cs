@@ -193,7 +193,7 @@ public class Enemy
 
     public Enemy(EnemyData EnemyData, InGameActor inGame)
     {
-        CardExecutor.OnPlayerAction += PlayerAction;
+        CardManager.OnPlayerAction += PlayerAction;
         enemyData = EnemyData;
         enemyName = EnemyData.enemyName;
         sprite = EnemyData.sprite;
@@ -226,7 +226,7 @@ public class Enemy
         if (inGameActor != null)
             UnityEngine.Object.Destroy(inGameActor.gameObject);
         // Unsubscribe from events
-        CardExecutor.OnPlayerAction -= PlayerAction;
+        CardManager.OnPlayerAction -= PlayerAction;
 
         // Clear Unity references and custom classes
         sprite = null;

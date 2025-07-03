@@ -45,12 +45,12 @@ public class Player : MonoBehaviour
 
     void OnEnable()
     {
-        CardExecutor.OnPlayerAction += PlayerAction;
+        CardManager.OnPlayerAction += PlayerAction;
     }
 
     void OnDisable()
     {
-        CardExecutor.OnPlayerAction -= PlayerAction;
+        CardManager.OnPlayerAction -= PlayerAction;
     }
 
     public void EnemyAttack(EnemyAttack enemyAttack, Enemy enemy)
