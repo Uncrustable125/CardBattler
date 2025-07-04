@@ -29,8 +29,8 @@ public class Enemy
             for (int i = card.frequency; i > 0; i--)
             {
                 int damage = (card.attack +
-                    BattleManager.Instance.player.Strength);
-                if (BattleManager.Instance.player.Weak >= 1)
+                    GameController.Instance.player.Strength);
+                if (GameController.Instance.player.Weak >= 1)
                 {
                     damage = damage * 3 / 4;
                 }
@@ -130,7 +130,7 @@ public class Enemy
             {
                 damage = damage * 3 / 4;
             }
-            if (BattleManager.Instance.player.Exposed >= 1)
+            if (GameController.Instance.player.Exposed >= 1)
             {
                 damage = damage * 3 / 2;
             }
@@ -168,7 +168,7 @@ public class Enemy
     {
 
 
-        BattleManager.Instance.player.EnemyAttack(eAttack, this);
+        GameController.Instance.player.EnemyAttack(eAttack, this);
         block += eAttack.block;
         Strength += eAttack.Strength;
         Debug.Log(eAttack.AttackName);

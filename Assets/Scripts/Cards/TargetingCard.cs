@@ -87,7 +87,7 @@ public class TargetingCard : MonoBehaviour
                         //Is the bug with the cards sticking to the mouse
 
                         target1.GetComponent<InGameActor>().ReturnCard();
-                        BattleManager.Instance.Action();
+                        GameController.Instance.Action();
                     }
 
                     StopTargeting();

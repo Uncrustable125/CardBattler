@@ -16,21 +16,21 @@ public class Button : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (BattleManager.Instance.battleState == BattleState.Battle)
+        if (GameController.Instance.battleState == BattleState.Battle)
         {
-            BattleManager.Instance.TurnEnd();
+            GameController.Instance.TurnEnd();
             Debug.Log("End Turn!");
             
         }
-        else if (BattleManager.Instance.battleState == BattleState.PrePostBattle)
+        else if (GameController.Instance.battleState == BattleState.PrePostBattle)
         {
-            BattleManager.Instance.AddCardDeck(null);
-            BattleManager.Instance.endTurnButton.transform.position = 
-                BattleManager.Instance.endTurnButton.originalPos;
+            GameController.Instance.AddCardDeck(null);
+            GameController.Instance.endTurnButton.transform.position = 
+                GameController.Instance.endTurnButton.originalPos;
         }
-        else if (BattleManager.Instance.battleState == BattleState.GameOver)
+        else if (GameController.Instance.battleState == BattleState.GameOver)
         {
-            BattleManager.Instance.restartGame();
+            GameController.Instance.restartGame();
         }
 
     }

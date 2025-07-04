@@ -16,7 +16,7 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        SetStats(BattleManager.Instance.playerCharacter);
+        SetStats(GameController.Instance.playerCharacter);
 
     }
 
@@ -82,17 +82,20 @@ public class Player : MonoBehaviour
         Weak += enemyAttack.Weak;
         UpdateTexts();
 
-        BattleManager.Instance.CheckForGameOver();
+        GameController.Instance.CheckForGameOver();
         
 
     }
 
 
-    public void NextLevel() //Turn into Event
+    public void playerLevelReset() //Turn into Event
     {
-        maxMana = 3;
-        Strength = 0;
-        dex = 0;
+        mana = maxMana;
+        block = 0;
+        Impower = 0;
+        Exposed = 0;
+        Weak = 0;
+        UpdateTexts();
     }
     public void playerTurnReset()
     {

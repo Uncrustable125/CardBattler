@@ -19,36 +19,33 @@ public class CardManager
     private CardIndex cardIndex;
     private GameObject cardPrefab;
     private SpawnManager spawnManager;
-    private BattleFlowManager battleFlowManager;
-    private BattleManager battleManager;
+    private BattleManager battleFlowManager;
+    private GameController battleManager;
     private Player player;
     private List<Enemy> enemies;
     public int rewardCards, extraDraw, drawCount;
     public static event Action<Card> OnPlayerAction;
 
-    public CardManager(Deck playerDeckBase, Deck discardPile, Deck currentPlayerDeck, Hand playerHand, Hand tempCards,
-        CardIndex cardIndex, GameObject cardPrefab,
-        SpawnManager spawnManager,
-        Player player, List<Enemy> enemies,
-        int rewardCards, int extraDraw)
+    public CardManager(BattleConfig battleConfig,
+        SpawnManager spawnManager)
     {
-        this.playerDeckBase = playerDeckBase;
-        this.discardPile = discardPile;
-        this.currentPlayerDeck = currentPlayerDeck;
-        this.playerHand = playerHand;
-        this.tempCards = tempCards;
-        this.cardIndex = cardIndex;
-        this.cardPrefab = cardPrefab;
+        this.playerDeckBase = battleConfig.playerDeckBase;
+        this.discardPile = battleConfig.discardPile;
+        this.currentPlayerDeck = battleConfig.currentPlayerDeck;
+        this.playerHand = battleConfig.playerHand;
+        this.tempCards = battleConfig.tempCards;
+        this.cardIndex = battleConfig.cardIndex;
+        this.cardPrefab = battleConfig.cardPrefab;
         this.spawnManager = spawnManager;
-        this.rewardCards = rewardCards;
-        this.player = player;
-        this.enemies = enemies;
-        this.extraDraw = extraDraw;
-        drawCount = 5 + extraDraw; //5 is standard draw
+        this.rewardCards = battleConfig.rewardCards;
+        this.player = battleConfig.player;
+        this.enemies = battleConfig.enemies;
+        this.extraDraw = battleConfig.extraDraw;
+        drawCount = 5 + battleConfig.extraDraw; //5 is standard draw
     }
 
     // All methods go here (SelectNewCard, DisplayCard, AddCardDeck, etc.)
-    public void SetBattleFlowManager(BattleFlowManager battleFlowManager)
+    public void SetBattleManager(BattleManager battleFlowManager)
     {
         this.battleFlowManager = battleFlowManager;
     }
@@ -186,11 +183,11 @@ public class CardManager
     /// </summary>
     public void ReShuffle()
     {
-        if (BattleManager.Instance.battleState == BattleState.Battle)
+        if (GameController.Instance.battleState == BattleState.Battle)
         {
             CopyAndShuffleDeck(currentPlayerDeck, discardPile);
         }
-        else if (BattleManager.Instance.battleState == BattleState.PrePostBattle)
+        else if (GameController.Instance.battleState == BattleState.PrePostBattle)
         {
             CopyAndShuffleDeck(currentPlayerDeck, playerDeckBase);
         }

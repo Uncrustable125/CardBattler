@@ -24,13 +24,13 @@ public class InGameActor : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (BattleManager.Instance.battleState == BattleState.Battle)
+        if (GameController.Instance.battleState == BattleState.Battle)
         {
             GetComponent<TargetingCard>().StartTargeting(card);
         }
-        else if (BattleManager.Instance.battleState == BattleState.PrePostBattle)
+        else if (GameController.Instance.battleState == BattleState.PrePostBattle)
         {
-            BattleManager.Instance.AddCardDeck(card);
+            GameController.Instance.AddCardDeck(card);
         }
         
     }
@@ -56,7 +56,7 @@ public class InGameActor : MonoBehaviour
         {
             enemy.isTargeted = true;
         }
-        BattleManager.Instance.Action();
+        GameController.Instance.Action();
 
     }
 }

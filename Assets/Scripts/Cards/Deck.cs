@@ -38,7 +38,7 @@ public class Deck : MonoBehaviour
         cards = new List<Card>();
         if (debug)
         {
-            foreach (var xc in BattleManager.Instance.cardIndex.cardData)
+            foreach (var xc in GameController.Instance.cardIndex.cardData)
             {
                 Card c = new Card(xc);
                 cards.Add(c);
@@ -48,7 +48,7 @@ public class Deck : MonoBehaviour
         }
         else
         {
-            foreach (var xc in BattleManager.Instance.cardIndex.cardData)
+            foreach (var xc in GameController.Instance.cardIndex.cardData)
             {
                 if (xc.cardName == "Strike")
                 {

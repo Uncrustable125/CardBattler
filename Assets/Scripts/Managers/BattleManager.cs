@@ -1,131 +1,146 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
-
-public class BattleManager : MonoBehaviour
+/// <summary>
+/// Handles turn-based logic including ending a turn and resetting player state.
+/// Extracted from BattleManager to separate responsibilities.
+/// </summary>
+public class BattleManager
 {
-    public static BattleManager Instance;
-    // GameController gc;
-    BattleConfig battleConfig;
-
-    int extraDraw, rewardCards, standardDraw;
-    public bool action, gameOver;
-
-    public CardIndex cardIndex;
-    public Deck playerDeckBase, currentPlayerDeck, discardPile;
-    Hand playerHand, tempCards;
-    public Player player;
-    public List<Enemy> enemies = new List<Enemy>();
-    //Enemy enemy0, enemy1, enemy2, enemy3;
-    public Button endTurnButton;
-    GameObject cardPrefab, enemyPrefab, playerPrefab, buttonPrefab, newPlayer;
-    SpawnManager spawnManager; CardManager cardManager; BattleFlowManager battleFlowManager;
-
-    public PlayerCharacter playerCharacter;
-    public BattleState battleState;
+    private List<Enemy> enemies;
+    private Player player;
+    private CardManager cardManager;
+    private TMPro.TextMeshProUGUI gameOverText;
+    private SpawnManager spawnManager;
+    private GameObject enemyPrefab, tempButton, buttonPrefab;
+    private Button endTurnButton, skipButton, button;
 
 
-    private void Awake()
+
+    public BattleManager(BattleConfig battleConfig, 
+        CardManager cardManager,
+        SpawnManager spawnManager)
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Optional: Persist across scenes
-        }
-        else
-        {
-            Destroy(gameObject); // Avoid duplicates
-        }
-
-    }
-    void Update()
-    {
-        if (action)
-        {
-            cardManager.TryPlayCards();
-            battleFlowManager.ResolvePostAction(playerHand);
-        }
-
-    }
-	public void CreateGame(BattleConfig battleConfig)
-	{
-		battleState = BattleState.PrePostBattle;
-		// Load prefabs from GameController
-		this.battleConfig = battleConfig;
-		cardPrefab = battleConfig.cardPrefab;
-		enemyPrefab = battleConfig.enemyPrefab;
-		playerPrefab = battleConfig.playerPrefab;
-		buttonPrefab = battleConfig.buttonPrefab;
-		endTurnButton = battleConfig.endTurnButton;
-		playerCharacter = battleConfig.character;
-		if (endTurnButton == null)
-			Debug.LogError("End Turn Button not found!");
-
-		// Load card index and player-specific cards
-		cardIndex = new CardIndex();
-		cardIndex.LoadCards(playerCharacter);
-
-		// Create game systems
-		player = gameObject.AddComponent<Player>();
-		playerDeckBase = gameObject.AddComponent<Deck>();
-		currentPlayerDeck = gameObject.AddComponent<Deck>();
-		discardPile = gameObject.AddComponent<Deck>();
-		playerHand = gameObject.AddComponent<Hand>();
-		tempCards = gameObject.AddComponent<Hand>();
-
-		// Core logic handlers
-		spawnManager = new SpawnManager(buttonPrefab, battleConfig.cameraParent);
-		cardManager = new CardManager(playerDeckBase, discardPile, currentPlayerDeck, playerHand, tempCards, cardIndex, cardPrefab, spawnManager, player, enemies, 3, 0);
-		battleFlowManager = new BattleFlowManager(enemies, player, this, cardManager, battleConfig, spawnManager, enemyPrefab, buttonPrefab, endTurnButton);
-		cardManager.SetBattleFlowManager(battleFlowManager);
-
-		// Battle flow config
-
-
-		StartGame();
-	}
-
-	void StartGame()
-	{
-		//If new game
-		player.SetStats(playerCharacter);
-		playerDeckBase.CreateDeck();
-		//else save file
-
-		spawnManager.SpawnPlayer(playerPrefab, player);
-		battleFlowManager.NextEncounter();
-	}
-
-
-    public void CheckForGameOver()
-    {
-        battleFlowManager.CheckForGameOver();
+        this.enemies = battleConfig.enemies;
+        this.player = battleConfig.player;
+        this.cardManager = cardManager;
+        this.spawnManager = spawnManager;
+        this.enemyPrefab = battleConfig.enemyPrefab;
+        this.buttonPrefab = battleConfig.buttonPrefab;
+        this.endTurnButton = battleConfig.endTurnButton;
+        this.gameOverText = battleConfig.gameOverText;
     }
 
+    /// <summary>
+    /// Called when the player ends their turn. Enemies take actions, cards are drawn, and player is reset.
+    /// </summary>
+    public void EndTurn()
+    {
+        cardManager.DisposeHand();
+        if (enemies.Count != 0)
+        {
+            foreach (var enemy in enemies)
+            {
+
+                enemy.EnemyTurn();
+                if (GameController.Instance.gameOver)
+                {
+                    break;
+                }
+            }
+
+            cardManager.DrawCards();
+        }
+
+        foreach (var enemy in enemies)
+        {
+
+            enemy.enemyAttackSelect();
+            if (GameController.Instance.gameOver)
+            {
+                break;
+            }
+        }
+
+        player.playerTurnReset();
+    }
     public void restartGame()
     {
-        battleFlowManager.restartGame();
-        StartGame();
+        spawnManager.DisposeButton(button);
+        gameOverText.alpha = 0;
+        GameController.Instance.battleState = BattleState.PrePostBattle;
+        endTurnButton.ReturnToOriginalPos();
+        GameController.Instance.gameOver = false;
+
     }
-    public void Action()
+    //All button stuff here
+    public void BattleGameOver()
     {
-        action = true;
+        cardManager.CardsGameOver();
+        gameOverText.alpha = 1.0f;
+        //Destroy all objects
+        foreach (Enemy x in enemies)
+        {
+            x.Dispose();
+        }
+        enemies.Clear();
+        player.Dispose();
+
+        spawnManager.SpawnSkipButton(1);
+
+        //Spawn in Game Over 
+
+        GameController.Instance.action = false;
+        endTurnButton.RemoveFromScreen();
+        GameController.Instance.battleState = BattleState.GameOver;
     }
 
-
-    public void TurnEnd()
+    public void NextEncounter()
     {
-        battleFlowManager.EndTurn();
+        player.playerLevelReset();
+        endTurnButton.ReturnToOriginalPos();
+        cardManager.ReShuffle();//with new card
+        Encounter encounter = new Encounter(UnityEngine.Random.Range(0, 3));
+
+        spawnManager.SpawnEnemies(encounter, enemyPrefab, enemies);
+        CreateEnemyAttackList();
+        cardManager.DrawCards();
+        GameController.Instance.battleState = BattleState.Battle;
     }
-
-    public void AddCardDeck(Card card)
+    void CreateEnemyAttackList()
     {
-        cardManager.AddCardDeck(card);
-		battleFlowManager.NextEncounter();
-	}
+        foreach (Enemy x in enemies)
+        {
+            x.enemyAttackSelect();
+        }
+    }
+    public void CheckForGameOver()
+    {
+        if (player.health <= 0 && !GameController.Instance.gameOver)
+        {
+            GameController.Instance.gameOver = true;
+            BattleGameOver();
+        }
+    }
+    public void EndEncounter(Hand playerHand)
+    {
+        GameController.Instance.battleState = BattleState.PrePostBattle;
+        cardManager.DisposeHand(playerHand);
+        endTurnButton.RemoveFromScreen();
+        cardManager.SelectNewCard();
+    }
+    public void ResolvePostAction(Hand playerHand)
+    {
+        enemies.RemoveAll(e => e.isDead);
+
+        if (enemies.Count == 0)
+        {
+            EndTurn();
+            EndEncounter(playerHand);
+        }
+        GameController.Instance.action = false;
+        CheckForGameOver();
+    }
 
 }
-public enum PlayerCharacter { Hero, Null, TheVessel, TheEcho, WaterMage }
-public enum BattleState { GameOver, Battle, PrePostBattle }
