@@ -18,8 +18,8 @@ public class CardManager
     private Hand tempCards;
     private CardIndex cardIndex;
     private GameObject cardPrefab;
-    private PrefabManager prefabManager;
-    private TurnManager turnManager;
+    private SpawnManager spawnManager;
+    private BattleFlowManager battleFlowManager;
     private BattleManager battleManager;
     private Player player;
     private List<Enemy> enemies;
@@ -28,7 +28,7 @@ public class CardManager
 
     public CardManager(Deck playerDeckBase, Deck discardPile, Deck currentPlayerDeck, Hand playerHand, Hand tempCards,
         CardIndex cardIndex, GameObject cardPrefab,
-        PrefabManager prefabManager,
+        SpawnManager spawnManager,
         Player player, List<Enemy> enemies,
         int rewardCards, int extraDraw)
     {
@@ -39,7 +39,7 @@ public class CardManager
         this.tempCards = tempCards;
         this.cardIndex = cardIndex;
         this.cardPrefab = cardPrefab;
-        this.prefabManager = prefabManager;
+        this.spawnManager = spawnManager;
         this.rewardCards = rewardCards;
         this.player = player;
         this.enemies = enemies;
@@ -48,9 +48,9 @@ public class CardManager
     }
 
     // All methods go here (SelectNewCard, DisplayCard, AddCardDeck, etc.)
-    public void SetTurnManager(TurnManager turnManager)
+    public void SetBattleFlowManager(BattleFlowManager battleFlowManager)
     {
-        this.turnManager = turnManager;
+        this.battleFlowManager = battleFlowManager;
     }
 
     public void SelectNewCard()
@@ -63,7 +63,7 @@ public class CardManager
             DisplayCard(tempCards.cards[i], i, false);
 
         }
-        turnManager.SpawnSkipButton(0);
+		spawnManager.SpawnSkipButton(0);
 
     }
 
@@ -97,7 +97,7 @@ public class CardManager
             playerDeckBase.cards.Add(card);
         }
         DisposeHand(tempCards);
-        turnManager.DisposeButton();
+        spawnManager.DisposeButton();
     }
     /// <summary>
     /// Transfers all cards in the player's hand to the discard pile and disposes their visuals.
@@ -157,7 +157,7 @@ public class CardManager
     {
         if (drawingHand)
         {
-            GameObject handCard = prefabManager.Spawn(cardPrefab, new Vector3(-4f + cardDrawn * 2f, -3f, 0f));
+            GameObject handCard = spawnManager.Spawn(cardPrefab, new Vector3(-4f + cardDrawn * 2f, -3f, 0f));
             InGameActor cardObj = handCard.GetComponent<InGameActor>();
             cardObj.objectName.text = card.cardName;
             cardObj.description.text = card.description;
@@ -169,7 +169,7 @@ public class CardManager
         }
         else // Picking New Card
         {
-            GameObject handCard = prefabManager.Spawn(cardPrefab, new Vector3(-4f + cardDrawn * 4f, 0f, 0f));
+            GameObject handCard = spawnManager.Spawn(cardPrefab, new Vector3(-4f + cardDrawn * 4f, 0f, 0f));
             handCard.transform.localScale = new Vector3(2f, 2f, 1f);
             InGameActor cardObj = handCard.GetComponent<InGameActor>();
             cardObj.objectName.text = card.cardName;
@@ -202,7 +202,7 @@ public class CardManager
         deck.Shuffle();
     }
 
-    public void GameOver()
+    public void CardsGameOver()
     {
         DisposeHand(playerHand);
         DisposeHand(tempCards);

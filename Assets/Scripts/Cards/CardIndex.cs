@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class CardIndex : MonoBehaviour
+public class CardIndex
 {
     public CardData[] cardData;
     public void LoadCards(PlayerCharacter playerCharacter)

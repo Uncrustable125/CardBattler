@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class EnemyIndex : MonoBehaviour
+public class EnemyIndex
 {
     public EnemyData[] enemyData;
-    void Awake()
+    public EnemyIndex()
     {
         enemyData = Resources.LoadAll("Enemies/Enemies", 
             typeof(EnemyData)).Cast<EnemyData>().ToArray();

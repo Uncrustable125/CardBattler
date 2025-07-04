@@ -1,32 +1,33 @@
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
 /// <summary>
 /// Handles turn-based logic including ending a turn and resetting player state.
 /// Extracted from BattleManager to separate responsibilities.
 /// </summary>
-public class TurnManager
+public class BattleFlowManager
 {
     private List<Enemy> enemies;
     private Player player;
     private BattleManager battleManager;
     private CardManager cardManager;
     private BattleConfig battleConfig;
-    private PrefabManager prefabManager;
-    private GameObject buttonPrefab;
+    private SpawnManager spawnManager;
+    private GameObject enemyPrefab, tempButton, buttonPrefab;
     private Button endTurnButton, skipButton, button;
-    private GameObject tempButton;
 
 
 
-    public TurnManager(
+    public BattleFlowManager(
         List<Enemy> enemies,
         Player player,
         BattleManager manager,
         CardManager cardManager,
         BattleConfig battleConfig,
-        PrefabManager prefabManager,
-        GameObject buttonPrefab, 
+        SpawnManager spawnManager,
+        GameObject enemyPrefab, 
+        GameObject buttonPrefab,
         Button endTurnButton)
     {
         this.enemies = enemies;
@@ -34,9 +35,9 @@ public class TurnManager
         this.battleManager = manager;
         this.cardManager = cardManager;
         this.battleConfig = battleConfig;
-        this.prefabManager = prefabManager;
+        this.spawnManager = spawnManager;
+        this.enemyPrefab = enemyPrefab;
         this.buttonPrefab = buttonPrefab;
-        
         this.endTurnButton = endTurnButton;
 
     }
@@ -76,27 +77,16 @@ public class TurnManager
     }
     public void restartGame()
     {
-        DisposeButton(button);
+        spawnManager.DisposeButton(button);
         battleConfig.gameOverText.alpha = 0;
-
-
         BattleManager.Instance.battleState = BattleState.PrePostBattle;
-
         endTurnButton.ReturnToOriginalPos();
         BattleManager.Instance.gameOver = false;
     }
-    public void DisposeButton(Button button = null)
-    {
-        if(button == null)
-        {
-            button = tempButton.GetComponent<Button>();
-        }
-        UnityEngine.Object.Destroy(button.gameObject);
-        button = null;
-    }
     //All button stuff here
-    public void GameOver()
+    public void BattleGameOver()
     {
+        cardManager.CardsGameOver();
         battleConfig.gameOverText.alpha = 1.0f;
         //Destroy all objects
         foreach (Enemy x in enemies)
@@ -106,7 +96,7 @@ public class TurnManager
         enemies.Clear();
         player.Dispose();
 
-        SpawnSkipButton(1);
+        spawnManager.SpawnSkipButton(1);
 
         //Spawn in Game Over 
 
@@ -114,12 +104,51 @@ public class TurnManager
         endTurnButton.RemoveFromScreen();
         BattleManager.Instance.battleState = BattleState.GameOver;
     }
-    public void SpawnSkipButton(int textSelection)
-    {
-        tempButton = prefabManager.Spawn(buttonPrefab, new Vector3(0f, -3.5f, 0f));
-        tempButton.transform.localScale = new Vector3(2f, 0.75f, 1f);
-        tempButton.GetComponent<Button>().updateText(textSelection);
-    }
 
+    public void NextEncounter()
+    {
+        endTurnButton.ReturnToOriginalPos();
+        cardManager.ReShuffle();//with new card
+        Encounter encounter = new Encounter(UnityEngine.Random.Range(0, 3));
+
+        spawnManager.SpawnEnemies(encounter, enemyPrefab, enemies);
+        CreateEnemyAttackList();
+        cardManager.DrawCards();
+        BattleManager.Instance.battleState = BattleState.Battle;
+    }
+    void CreateEnemyAttackList()
+    {
+        foreach (Enemy x in enemies)
+        {
+            x.enemyAttackSelect();
+        }
+    }
+    public void CheckForGameOver()
+    {
+        if (player.health <= 0 && !BattleManager.Instance.gameOver)
+        {
+            BattleManager.Instance.gameOver = true;
+            BattleGameOver();
+        }
+    }
+    public void EndEncounter(Hand playerHand)
+    {
+        BattleManager.Instance.battleState = BattleState.PrePostBattle;
+        cardManager.DisposeHand(playerHand);
+        endTurnButton.RemoveFromScreen();
+        cardManager.SelectNewCard();
+    }
+    public void ResolvePostAction(Hand playerHand)
+    {
+        enemies.RemoveAll(e => e.isDead);
+
+        if (enemies.Count == 0)
+        {
+            EndTurn();
+            EndEncounter(playerHand);
+        }
+        BattleManager.Instance.action = false;
+        CheckForGameOver();
+    }
 
 }
