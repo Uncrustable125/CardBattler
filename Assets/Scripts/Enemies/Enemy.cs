@@ -21,8 +21,27 @@ public class Enemy
     List<EnemyAttack> randomAttackSet, specificTurnAttackSet;
     List<EnemyAttack> tempAttackSet;
 
+    public Enemy(EnemyData EnemyData, InGameActor inGame)
+    {
+        CardManager.OnPlayerAction += RecievePlayerAction;
+        enemyData = EnemyData;
+        enemyName = EnemyData.enemyName;
+        sprite = EnemyData.sprite;
+        health = EnemyData.health;
+        Strength = 0;
+        Exposed = 0;
+        Weak = 0;
+        isTargeted = false;
+        enemyAttackIndex = new EnemyAttackIndex(EnemyData);
+        randomAttackSet = new List<EnemyAttack>();
+        specificTurnAttackSet = new List<EnemyAttack>();
+        inGameActor = inGame;
+        inGame.enemy = this;
+        UpdateSprites();
+        UpdateTexts();
+    }
 
-    public void PlayerAction(Card card) //Event
+    public void RecievePlayerAction(Card card) //Event
     {
         if (isTargeted)
         {
@@ -83,7 +102,7 @@ public class Enemy
     }
 
 
-    public void enemyAttackSelect()
+    public void EnemyAttackSelect()
     {
         bool isRandom = true;
         EnemyAttack currentAttck = null;
@@ -160,15 +179,12 @@ public class Enemy
             Attack(enemyattack);
 
         }
-
         currentTurnNumber++;
         DeclementBuffsAndDebuffs();
     }
     void Attack(EnemyAttack eAttack)
     {
-
-
-        GameController.Instance.player.EnemyAttack(eAttack, this);
+        GameController.Instance.player.RecieveEnemyAttack(eAttack, this);
         block += eAttack.block;
         Strength += eAttack.Strength;
         Debug.Log(eAttack.AttackName);
@@ -191,25 +207,7 @@ public class Enemy
         }
     }
 
-    public Enemy(EnemyData EnemyData, InGameActor inGame)
-    {
-        CardManager.OnPlayerAction += PlayerAction;
-        enemyData = EnemyData;
-        enemyName = EnemyData.enemyName;
-        sprite = EnemyData.sprite;
-        health = EnemyData.health;
-        Strength = 0;
-        Exposed = 0;
-        Weak = 0;
-        isTargeted = false;
-        enemyAttackIndex = new EnemyAttackIndex(EnemyData);
-        randomAttackSet = new List<EnemyAttack>();
-        specificTurnAttackSet = new List<EnemyAttack>();
-        inGameActor = inGame;
-        inGame.enemy = this;
-        UpdateSprites();
-        UpdateTexts();
-    }
+
     public void UpdateSprites()
     {
         inGameActor.objectName.text = enemyName;
@@ -226,7 +224,7 @@ public class Enemy
         if (inGameActor != null)
             UnityEngine.Object.Destroy(inGameActor.gameObject);
         // Unsubscribe from events
-        CardManager.OnPlayerAction -= PlayerAction;
+        CardManager.OnPlayerAction -= RecievePlayerAction;
 
         // Clear Unity references and custom classes
         sprite = null;

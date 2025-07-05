@@ -56,7 +56,7 @@ public class BattleManager
         foreach (var enemy in enemies)
         {
 
-            enemy.enemyAttackSelect();
+            enemy.EnemyAttackSelect();
             if (GameController.Instance.gameOver)
             {
                 break;
@@ -112,7 +112,7 @@ public class BattleManager
     {
         foreach (Enemy x in enemies)
         {
-            x.enemyAttackSelect();
+            x.EnemyAttackSelect();
         }
     }
     public void CheckForGameOver()

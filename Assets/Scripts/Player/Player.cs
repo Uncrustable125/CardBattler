@@ -1,4 +1,4 @@
-using System;
+ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -53,7 +53,7 @@ public class Player : MonoBehaviour
         CardManager.OnPlayerAction -= PlayerAction;
     }
 
-    public void EnemyAttack(EnemyAttack enemyAttack, Enemy enemy)
+    public void RecieveEnemyAttack(EnemyAttack enemyAttack, Enemy enemy)
     {
         for (int i = enemyAttack.frequency; i > 0; i--)
         {
@@ -119,20 +119,9 @@ public class Player : MonoBehaviour
     public void PlayerAction(Card card) //Event
     {
         Strength += card.Strength;
-
-
         mana -= card.cost;
         block += card.block;
         health += card.Heal;
-        UpdateTexts();
-    }
-    public void NextEncounter()
-    {
-        mana = maxMana;
-        block = 0;
-        Impower = 0;
-        Exposed = 0;
-        Weak = 0;
         UpdateTexts();
     }
     public void Dispose()
